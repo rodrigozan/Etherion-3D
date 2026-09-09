@@ -2,15 +2,16 @@
 import { useMemo, useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { heightAt, regions, shrines, spawn, village } from '../world/data';
+import { heightAt, fbm, regions, shrines, spawn, village } from '../world/data';
 import { type Progress, type Action, isVillageUnlocked } from '../world/progression';
 import {Vegetation,Paths,Village,Atmosphere,Wildlife,Mountains} from './Landscape';
 import {move} from '../world/navigation';
 export type Controls = {keys:Set<string>; yaw:number; pitch:number};
 type Props = {progress:Progress; dispatch:React.Dispatch<Action>; controls:Controls; onPosition:(x:number,z:number)=>void; detail?:boolean};
 function Terrain() {
- const geo=useMemo(()=>{const g=new THREE.PlaneGeometry(200,200,128,128);g.rotateX(-Math.PI/2);const p=g.attributes.position;const colors=[];const c=new THREE.Color();for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),h=heightAt(x,z);p.setY(i,h);c.set(h>7?'#626850':h>4?'#4f6150':'#304e47');c.multiplyScalar(.82+Math.sin(x*2+z*3)*.08);colors.push(c.r,c.g,c.b);}g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;},[]);
+ const geo=useMemo(()=>{const g=new THREE.PlaneGeometry(200,200,128,128);g.rotateX(-Math.PI/2);const p=g.attributes.position;const colors=[];const c=new THREE.Color();for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),h=heightAt(x,z);p.setY(i,h);c.set(h>7?'#626850':h>4?'#4f6150':'#304e47');c.multiplyScalar(.82+fbm(x*2.5,z*2.5,3)*.16);colors.push(c.r,c.g,c.b);}g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;},[]);
  return <mesh geometry={geo} receiveShadow><meshStandardMaterial vertexColors roughness={1}/></mesh>;
 }
 function CameraRig({progress,dispatch,controls,onPosition}:Props) {
@@ -27,11 +28,15 @@ function CameraRig({progress,dispatch,controls,onPosition}:Props) {
 }
 function Scene(props:Props){return <>
  <color attach="background" args={['#172d30']}/><fog attach="fog" args={props.progress.mode==='map'?['#233d39',155,240]:['#6b7566',55,145]}/>
- <ambientLight intensity={.65}/><hemisphereLight args={['#bac8c0','#242c25',1.2]}/><directionalLight position={[-30,32,-20]} color="#ffcc86" intensity={3}/>
+ <ambientLight intensity={.55}/><hemisphereLight args={['#bac8c0','#242c25',1.1]}/>
+ <directionalLight position={[-30,32,-20]} color="#ffcc86" intensity={3} castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-75} shadow-camera-right={75} shadow-camera-top={75} shadow-camera-bottom={-75} shadow-camera-near={1} shadow-camera-far={160} shadow-bias={-.0015} shadow-normalBias={.025}/>
  <Terrain/><Paths/><Vegetation/><Village unlocked={isVillageUnlocked(props.progress)}/><Atmosphere/><Mountains/><Wildlife/>
  {shrines.map(s=><group key={s.id} position={[s.x,heightAt(s.x,s.z),s.z]}><mesh position={[0,1,0]}><boxGeometry args={[.65,2,.5]}/><meshStandardMaterial color="#7e8170"/></mesh><mesh position={[0,2.2,0]}><octahedronGeometry args={[.3]}/><meshStandardMaterial color="#c7ebdf" emissive="#74ceaf" emissiveIntensity={props.progress.attuned.includes(s.id)?3:1}/></mesh></group>)}
  {props.progress.mode==='map'&&regions.map(r=><Html key={r.id} position={[r.x,heightAt(r.x,r.z)+5,r.z]} center zIndexRange={[20,10]}><button className={'map-marker '+(r.id==='hill'?'active':r.id==='village'&&isVillageUnlocked(props.progress)?'unlocked':'locked')} disabled={r.id!=='hill'&&!(r.id==='village'&&isVillageUnlocked(props.progress))} onClick={()=>props.dispatch({type:'enter',target:r.id==='village'?'village':'hill'})}><span className="marker-icon">{r.id==='hill'?'◇':r.id==='village'&&isVillageUnlocked(props.progress)?'◇':'⌑'}</span><span>{r.name}</span><small>{r.id==='hill'?'EXPLORAR REGIÃO':r.id==='village'&&isVillageUnlocked(props.progress)?'DESBLOQUEADA':'BLOQUEADA'}</small></button></Html>)}
  <CameraRig {...props}/>
  </>;}
-export default function World(props:Props){return <Canvas camera={{position:[0,91,42],fov:49,near:.1,far:220}} dpr={[1,1]} gl={{antialias:true,powerPreference:'high-performance'}}><Scene {...props}/></Canvas>;}
+export default function World(props:Props){return <Canvas shadows camera={{position:[0,91,42],fov:49,near:.1,far:220}} dpr={[1,1.75]} gl={{antialias:true,powerPreference:'high-performance',toneMapping:THREE.ACESFilmicToneMapping}}>
+ <Scene {...props}/>
+ <EffectComposer multisampling={0}><Bloom mipmapBlur intensity={.65} luminanceThreshold={.82} luminanceSmoothing={.15} radius={.6}/></EffectComposer>
+ </Canvas>;}
 
