@@ -1,7 +1,7 @@
 import {useMemo,useLayoutEffect,useRef} from 'react';
 import {useFrame} from '@react-three/fiber';
 import * as THREE from 'three';
-import {heightAt,random,village,bosque} from '../world/data';
+import {heightAt,random,village,bosque,clareira} from '../world/data';
 
 export function pathX(z:number){return 1.9*Math.sin((z-4)*.15);}
 function leafCluster(){const rand=random(122);const p:number[]=[],uv:number[]=[],indices:number[]=[];const v=new THREE.Vector3();const q=new THREE.Quaternion();for(let i=0;i<72;i++){const theta=rand()*Math.PI*2,phi=Math.acos(rand()*2-1),r=Math.pow(rand(),.33);const center=new THREE.Vector3(r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));q.setFromEuler(new THREE.Euler(rand()*3,rand()*6,rand()*3));const s=.085+rand()*.12;for(const [x,y] of [[0,-1],[-.55,0],[0,1],[.55,0]]){v.set(x*s,y*s,(rand()-.5)*s*.4).applyQuaternion(q).add(center);p.push(v.x,v.y,v.z);}uv.push(.5,0,0,.5,.5,1,1,.5);const n=i*4;indices.push(n,n+1,n+2,n,n+2,n+3);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();return g;}
@@ -76,6 +76,26 @@ export function Forest({unlocked}:{unlocked:boolean}){return <group>
  {[-2.6,2.6].map(z=><mesh key={z} position={[0,2.1,z]} rotation={[0,0,Math.sin(z)*.12]} castShadow receiveShadow><cylinderGeometry args={[.32,.55,4.2,8]}/><meshStandardMaterial color="#332a1e" roughness={1}/></mesh>)}
  <mesh position={[0,4.1,0]} rotation={[Math.PI/2,0,0]} castShadow><torusGeometry args={[2.65,.28,8,20,Math.PI]}/><meshStandardMaterial color="#3b5c40" roughness={.95}/></mesh>
  {!unlocked&&<mesh position={[0,2.1,0]} rotation={[0,Math.PI/2,0]}><planeGeometry args={[5.2,4.2]}/><meshStandardMaterial color="#6fd99a" emissive="#4fae7a" emissiveIntensity={.7} transparent opacity={.22} side={THREE.DoubleSide}/></mesh>}
+ </group>
+ </group>;}
+
+function BlossomGrove(){const rand=useMemo(()=>random(7301),[]);const foliage=useMemo(leafCluster,[]);const leafMap=useMemo(leafTexture,[]);const trunks=useRef<THREE.InstancedMesh>(null);const canopies=useRef<THREE.InstancedMesh>(null);
+ const items=useMemo(()=>Array.from({length:46},()=>{const a=rand()*Math.PI*2,r=2.6+rand()*9;return {x:clareira.x+Math.cos(a)*r,z:clareira.z+Math.sin(a)*r,h:1.6+rand()*1.6,s:.6+rand()*.5};}),[rand]);
+ useLayoutEffect(()=>{if(!trunks.current||!canopies.current)return;const dummy=new THREE.Object3D(),color=new THREE.Color();const palette=['#ff8fd6','#ffd166','#7ee8c4','#c39bff','#ff9e6d'];
+ items.forEach((t,i)=>{const y=heightAt(t.x,t.z);dummy.position.set(t.x,y+t.h*.5,t.z);dummy.rotation.set(0,rand()*6.28,0);dummy.scale.set(.09,t.h,.09);dummy.updateMatrix();trunks.current!.setMatrixAt(i,dummy.matrix);
+ dummy.position.set(t.x,y+t.h+.3,t.z);dummy.scale.set(t.s,t.s,t.s);dummy.updateMatrix();canopies.current!.setMatrixAt(i,dummy.matrix);color.set(palette[i%palette.length]);canopies.current!.setColorAt(i,color);});
+ trunks.current.instanceMatrix.needsUpdate=true;canopies.current.instanceMatrix.needsUpdate=true;if(canopies.current.instanceColor)canopies.current.instanceColor.needsUpdate=true;
+ },[items]);
+ return <group><instancedMesh ref={trunks} args={[undefined,undefined,items.length]} castShadow receiveShadow><cylinderGeometry args={[.3,.6,1,7]}/><meshStandardMaterial color="#4a3323" roughness={1}/></instancedMesh>
+ <instancedMesh ref={canopies} args={[foliage,undefined,items.length]} castShadow receiveShadow><meshStandardMaterial roughness={.7} side={THREE.DoubleSide} alphaMap={leafMap} alphaTest={.35}/></instancedMesh>
+ </group>;}
+export function TempleClearing({unlocked}:{unlocked:boolean}){return <group>
+ <BlossomGrove/>
+ <group position={[clareira.x,heightAt(clareira.x,clareira.z),clareira.z]}>
+ {[-1.6,1.6].map(x=><mesh key={x} position={[x,1.9,0]} castShadow receiveShadow><cylinderGeometry args={[.32,.4,3.8,10]}/><meshStandardMaterial color="#8a6a3a" metalness={.4} roughness={.5}/></mesh>)}
+ <mesh position={[0,3.85,0]} castShadow><boxGeometry args={[3.6,.42,.5]}/><meshStandardMaterial color="#caa14a" metalness={.6} roughness={.35}/></mesh>
+ <mesh position={[0,1.9,0]}><torusGeometry args={[1.3,.05,8,28]}/><meshStandardMaterial color="#ffd9a0" emissive="#ffb454" emissiveIntensity={1.8}/></mesh>
+ {!unlocked&&<mesh position={[0,1.9,0]}><planeGeometry args={[3.8,3.9]}/><meshStandardMaterial color="#ffb454" emissive="#ff8fd6" emissiveIntensity={.7} transparent opacity={.22} side={THREE.DoubleSide}/></mesh>}
  </group>
  </group>;}
 
