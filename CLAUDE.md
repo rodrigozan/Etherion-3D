@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Comandos
 
+Usar apenas comandos *_yarn_*, nunca usar comandos _npm_
+
 ```sh
-npm install       # instalar dependências
-npm run dev       # servidor de desenvolvimento (Vite, --host 0.0.0.0)
-npm run build     # tsc -b (verificação de tipos) seguido de vite build → dist/
-npm test          # tsx --test src/world/progression.test.ts
+yarn install       # instalar dependências
+yarn dev           # servidor de desenvolvimento (Vite, --host 0.0.0.0)
+yarn build         # tsc -b (verificação de tipos) seguido de vite build → dist/
+yarn test          # tsx --test src/world/progression.test.ts
 ```
 
 Não há linter configurado. Não há flag para rodar um teste isolado — `progression.test.ts` é o único arquivo de teste e roda ambos os `test()` de uma vez via `node:test`.

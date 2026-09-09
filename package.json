@@ -1,1 +1,32 @@
-{"name":"etherion","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"tsc -b && vite build","test":"tsx --test src/world/progression.test.ts"},"dependencies":{"@react-three/drei":"^10.7.0","@react-three/fiber":"^9.3.0","@react-three/postprocessing":"^3.1.1","lucide-react":"^0.468.0","postprocessing":"^6.39.4","react":"^19.1.0","react-dom":"^19.1.0","simplex-noise":"^4.0.3","three":"^0.180.0"},"devDependencies":{"@types/node":"^22.0.0","@types/react":"^19.1.0","@types/react-dom":"^19.1.0","@types/three":"^0.180.0","@vitejs/plugin-react":"^5.0.0","tsx":"^4.20.0","typescript":"~5.9.2","vite":"^7.1.0"}}
+{
+    "name": "etherion-3d",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite --host 0.0.0.0",
+        "build": "tsc -b && vite build",
+        "test": "tsx --test src/world/progression.test.ts"
+    },
+    "dependencies": {
+        "@react-three/drei": "^10.7.0",
+        "@react-three/fiber": "^9.3.0",
+        "@react-three/postprocessing": "^3.1.1",
+        "lucide-react": "^0.468.0",
+        "postprocessing": "^6.39.4",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "simplex-noise": "^4.0.3",
+        "three": "^0.180.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "@types/react": "^19.1.0",
+        "@types/react-dom": "^19.1.0",
+        "@types/three": "^0.180.0",
+        "@vitejs/plugin-react": "^5.0.0",
+        "tsx": "^4.20.0",
+        "typescript": "~5.9.2",
+        "vite": "^7.1.0"
+    }
+}
