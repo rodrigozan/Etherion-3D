@@ -17,6 +17,10 @@ export const shrines = [
   { id: 'watch', region: 'temple_clearing', name: 'Presença que observa', x: -42, z: -20 },
 ];
 export const spawn = { x: 0, z: 20 };
+export type RegionKey = 'hill' | 'village' | 'forest' | 'temple_clearing';
+export function regionAt(x: number, z: number): RegionKey {
+  return x<-33&&Math.abs(z-clareira.z)<14?'temple_clearing':x<-20?'forest':z<-19?'village':'hill';
+}
 export const village = { x: 1, z: -23 };
 export const bosque = { x: -29, z: -3 };
 export const clareira = { x: -38, z: -16 };

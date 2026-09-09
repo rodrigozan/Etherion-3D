@@ -52,7 +52,7 @@ function House({x,z,scale=1,angle=0,seed=0}:{x:number;z:number;scale?:number;ang
  <mesh position={[0,2.05,0]} castShadow receiveShadow><coneGeometry args={[r*1.22,1.35,16]}/><meshStandardMaterial map={roofTex} roughness={1}/></mesh>
  <mesh position={[0,2.75,0]}><sphereGeometry args={[.1,8,8]}/><meshStandardMaterial color="#caa14a" metalness={.6} roughness={.3}/></mesh>
  <mesh position={[0,0,r*.99]} rotation={[0,0,0]}><shapeGeometry args={[door]}/><meshStandardMaterial color="#231b16" side={THREE.DoubleSide}/></mesh>
- {[-.85,.85].map(a=><mesh key={a} position={[Math.sin(a)*r*.97,1.15,Math.cos(a)*r*.97]} rotation={[0,a,0]}><circleGeometry args={[.17,14]}/><meshStandardMaterial color="#ffce85" emissive="#f0a13d" emissiveIntensity={1.4} side={THREE.DoubleSide}/></mesh>)}
+ {[-.85,.85].map(a=><group key={a} position={[Math.sin(a)*r*.97,1.15,Math.cos(a)*r*.97]} rotation={[0,a,0]}><mesh><circleGeometry args={[.17,14]}/><meshStandardMaterial color="#ffce85" emissive="#f0a13d" emissiveIntensity={1.4} side={THREE.DoubleSide}/></mesh><pointLight position={[0,0,.1]} color="#ffb15c" intensity={.8} distance={4} decay={2}/></group>)}
  <mesh position={[0,.02,0]} rotation={[Math.PI/2,0,0]}><torusGeometry args={[r*1.03,.05,8,24]}/><meshStandardMaterial color="#caa14a" metalness={.6} roughness={.4}/></mesh>
  </group>;}
 export function Village({unlocked}:{unlocked:boolean}){return <group>
@@ -69,6 +69,7 @@ function GroveHeart(){const rand=random(9042);const roots=useMemo(()=>Array.from
  {roots.map((r,i)=><mesh key={i} position={[Math.sin(r.a)*r.len*.5,.25,Math.cos(r.a)*r.len*.5]} rotation={[0,-r.a,Math.PI/2-.3]} castShadow><cylinderGeometry args={[.16,.32,r.len,6]}/><meshStandardMaterial color="#312619" roughness={1}/></mesh>)}
  <mesh position={[0,5.6,0]}><icosahedronGeometry args={[2.6,1]}/><meshStandardMaterial color="#3f5a3e" roughness={.9}/></mesh>
  <mesh position={[0,1.4,0]}><torusGeometry args={[1.05,.09,8,24]}/><meshStandardMaterial color="#8ee6b0" emissive="#6fd99a" emissiveIntensity={1.6}/></mesh>
+ <pointLight position={[0,1.4,0]} color="#6fd99a" intensity={2.4} distance={9} decay={2}/>
  </group>;}
 export function Forest({unlocked}:{unlocked:boolean}){return <group>
  <GroveHeart/>
@@ -95,6 +96,7 @@ export function TempleClearing({unlocked}:{unlocked:boolean}){return <group>
  {[-1.6,1.6].map(x=><mesh key={x} position={[x,1.9,0]} castShadow receiveShadow><cylinderGeometry args={[.32,.4,3.8,10]}/><meshStandardMaterial color="#8a6a3a" metalness={.4} roughness={.5}/></mesh>)}
  <mesh position={[0,3.85,0]} castShadow><boxGeometry args={[3.6,.42,.5]}/><meshStandardMaterial color="#caa14a" metalness={.6} roughness={.35}/></mesh>
  <mesh position={[0,1.9,0]}><torusGeometry args={[1.3,.05,8,28]}/><meshStandardMaterial color="#ffd9a0" emissive="#ffb454" emissiveIntensity={1.8}/></mesh>
+ <pointLight position={[0,1.9,0]} color="#ffb454" intensity={2.6} distance={10} decay={2}/>
  {!unlocked&&<mesh position={[0,1.9,0]}><planeGeometry args={[3.8,3.9]}/><meshStandardMaterial color="#ffb454" emissive="#ff8fd6" emissiveIntensity={.7} transparent opacity={.22} side={THREE.DoubleSide}/></mesh>}
  </group>
  </group>;}
