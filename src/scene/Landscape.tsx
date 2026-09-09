@@ -1,7 +1,7 @@
 import {useMemo,useLayoutEffect,useRef} from 'react';
 import {useFrame} from '@react-three/fiber';
 import * as THREE from 'three';
-import {heightAt,random,village} from '../world/data';
+import {heightAt,random,village,bosque} from '../world/data';
 
 export function pathX(z:number){return 1.9*Math.sin((z-4)*.15);}
 function leafCluster(){const rand=random(122);const p:number[]=[],uv:number[]=[],indices:number[]=[];const v=new THREE.Vector3();const q=new THREE.Quaternion();for(let i=0;i<72;i++){const theta=rand()*Math.PI*2,phi=Math.acos(rand()*2-1),r=Math.pow(rand(),.33);const center=new THREE.Vector3(r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));q.setFromEuler(new THREE.Euler(rand()*3,rand()*6,rand()*3));const s=.085+rand()*.12;for(const [x,y] of [[0,-1],[-.55,0],[0,1],[.55,0]]){v.set(x*s,y*s,(rand()-.5)*s*.4).applyQuaternion(q).add(center);p.push(v.x,v.y,v.z);}uv.push(.5,0,0,.5,.5,1,1,.5);const n=i*4;indices.push(n,n+1,n+2,n,n+2,n+3);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();return g;}
@@ -24,7 +24,7 @@ export function Vegetation(){
  const trunks=useRef<THREE.InstancedMesh>(null);const crowns=useRef<THREE.InstancedMesh>(null);const grasses=useRef<THREE.InstancedMesh>(null);const rocksA=useRef<THREE.InstancedMesh>(null);const rocksB=useRef<THREE.InstancedMesh>(null);
  const grassUniforms=useMemo(()=>({uTime:{value:0}}),[]);
  useFrame(({clock})=>{grassUniforms.uTime.value=clock.elapsedTime;});
- const objects=useMemo(()=>{const rand=random(6041);const trees=[];for(let i=0;i<580;i++){const x=(rand()-.5)*140,z=(rand()-.5)*140;if(Math.abs(x-pathX(z))<(z>0&&z<29?10:4)||Math.hypot(x-village.x,z-village.z)<10||Math.abs(x-(19+6*Math.sin(z*.055)+3*Math.sin(z*.15)))<3)continue;trees.push({x,z,h:3.5+rand()*5,w:1+rand()*.8,c:['#55644b','#777048','#724749','#5c465a','#3c584b','#354e44'][Math.floor(rand()*6)],angle:rand()*6.28});}return trees;},[]);
+ const objects=useMemo(()=>{const rand=random(6041);const trees=[];for(let i=0;i<580;i++){const x=(rand()-.5)*140,z=(rand()-.5)*140;if(Math.abs(x-pathX(z))<(z>0&&z<29?10:4)||Math.hypot(x-village.x,z-village.z)<10||Math.hypot(x-bosque.x,z-bosque.z)<6||Math.abs(x-(19+6*Math.sin(z*.055)+3*Math.sin(z*.15)))<3)continue;trees.push({x,z,h:3.5+rand()*5,w:1+rand()*.8,c:['#55644b','#777048','#724749','#5c465a','#3c584b','#354e44'][Math.floor(rand()*6)],angle:rand()*6.28});}return trees;},[]);
  useLayoutEffect(()=>{if(!trunks.current||!crowns.current||!grasses.current||!rocksA.current||!rocksB.current)return;const dummy=new THREE.Object3D(),color=new THREE.Color();const rand=random(3307);
  objects.forEach((t,i)=>{const y=heightAt(t.x,t.z);dummy.position.set(t.x,y+t.h*.42,t.z);dummy.rotation.set(0,t.angle,.03);dummy.scale.set(.16,t.h*.84,.16);dummy.updateMatrix();trunks.current!.setMatrixAt(i,dummy.matrix);
  for(let j=0;j<4;j++){dummy.position.set(t.x+Math.sin(j*2.2)*t.w*.5,y+t.h*(.55+j*.12),t.z+Math.cos(j*2.2)*t.w*.5);dummy.scale.set(t.w*(1.2-j*.16),t.h*.27,t.w*(1.2-j*.16));dummy.rotation.set(j*.2,t.angle,Math.sin(j)*.12);dummy.updateMatrix();crowns.current!.setMatrixAt(i*4+j,dummy.matrix);color.set(t.c).multiplyScalar(.8+rand()*.35);crowns.current!.setColorAt(i*4+j,color);}});
@@ -61,6 +61,21 @@ export function Village({unlocked}:{unlocked:boolean}){return <group>
  {[-3,3].map(x=><mesh key={x} position={[x,1.7,0]} castShadow receiveShadow><cylinderGeometry args={[.24,.3,3.4,10]}/><meshStandardMaterial color="#6b4a2c" roughness={.85}/></mesh>)}
  <mesh position={[0,3.4,0]} rotation={[0,0,Math.PI/2]} castShadow><cylinderGeometry args={[.22,.22,6.7,10]}/><meshStandardMaterial color="#caa14a" metalness={.55} roughness={.35}/></mesh>
  {!unlocked&&<mesh position={[0,1.7,0]}><planeGeometry args={[5.6,3.3]}/><meshStandardMaterial color="#7aabc0" emissive="#628f9b" emissiveIntensity={.7} transparent opacity={.22} side={THREE.DoubleSide}/></mesh>}
+ </group>
+ </group>;}
+function GroveHeart(){const rand=random(9042);const roots=useMemo(()=>Array.from({length:6},(_,i)=>({a:(i/6)*Math.PI*2+rand()*.3,len:2.4+rand()*1.4})),[]);
+ return <group position={[bosque.x,heightAt(bosque.x,bosque.z),bosque.z]}>
+ <mesh position={[0,2.6,0]} castShadow receiveShadow><cylinderGeometry args={[.9,1.5,5.2,10]}/><meshStandardMaterial color="#392c22" roughness={1}/></mesh>
+ {roots.map((r,i)=><mesh key={i} position={[Math.sin(r.a)*r.len*.5,.25,Math.cos(r.a)*r.len*.5]} rotation={[0,-r.a,Math.PI/2-.3]} castShadow><cylinderGeometry args={[.16,.32,r.len,6]}/><meshStandardMaterial color="#312619" roughness={1}/></mesh>)}
+ <mesh position={[0,5.6,0]}><icosahedronGeometry args={[2.6,1]}/><meshStandardMaterial color="#3f5a3e" roughness={.9}/></mesh>
+ <mesh position={[0,1.4,0]}><torusGeometry args={[1.05,.09,8,24]}/><meshStandardMaterial color="#8ee6b0" emissive="#6fd99a" emissiveIntensity={1.6}/></mesh>
+ </group>;}
+export function Forest({unlocked}:{unlocked:boolean}){return <group>
+ <GroveHeart/>
+ <group position={[-20,heightAt(-20,bosque.z),bosque.z]}>
+ {[-2.6,2.6].map(z=><mesh key={z} position={[0,2.1,z]} rotation={[0,0,Math.sin(z)*.12]} castShadow receiveShadow><cylinderGeometry args={[.32,.55,4.2,8]}/><meshStandardMaterial color="#332a1e" roughness={1}/></mesh>)}
+ <mesh position={[0,4.1,0]} rotation={[Math.PI/2,0,0]} castShadow><torusGeometry args={[2.65,.28,8,20,Math.PI]}/><meshStandardMaterial color="#3b5c40" roughness={.95}/></mesh>
+ {!unlocked&&<mesh position={[0,2.1,0]} rotation={[0,Math.PI/2,0]}><planeGeometry args={[5.2,4.2]}/><meshStandardMaterial color="#6fd99a" emissive="#4fae7a" emissiveIntensity={.7} transparent opacity={.22} side={THREE.DoubleSide}/></mesh>}
  </group>
  </group>;}
 
