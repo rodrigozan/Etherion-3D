@@ -47,6 +47,7 @@ test('walking follows the route, respects sealed village/forest/clearing gates a
  assert.equal(state.visited.includes('village'),true);
  assert.equal(isForestUnlocked(state),true);
  const sealedForest=move({x:0,z:-3},0,0,-1,10,6,{village:true,forest:false,templeClearing:false});assert.equal(sealedForest.x,-20);
+ const sealedForestAtVillage=move({x:0,z:village.z},0,0,-1,10,6,{village:true,forest:false,templeClearing:false});assert.equal(sealedForestAtVillage.x,-20,'the forest gate must also block at the village latitude, not only near the grove, or players can sneak past without visiting the village');
  for(const shrine of forestShrines){
   for(let i=0;i<1200;i++){
    const dx=shrine.x-position.x,dz=shrine.z-position.z;if(Math.hypot(dx,dz)<.2)break;
