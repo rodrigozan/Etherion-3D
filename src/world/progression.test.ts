@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialProgress, progression, isVillageUnlocked, isForestUnlocked, isTempleClearingUnlocked } from './progression';
+import { initialProgress, progression, objective, isVillageUnlocked, isForestUnlocked, isTempleClearingUnlocked } from './progression';
 import { shrines, village, bosque, clareira } from './data';
 import { move } from './navigation';
 const hillShrines = shrines.filter(s=>s.region==='hill');
@@ -78,4 +78,18 @@ test('walking follows the route, respects sealed village/forest/clearing gates a
  assert.equal(move(position,0,0,-1,100,6,{village:true,forest:true,templeClearing:true}).x,-47);
  assert.equal(progression(initialProgress,{type:'enter',target:'village'}).mode,'map');
  state=progression(state,{type:'map'});state=progression(state,{type:'enter',target:'village'});assert.equal(state.entry,'village');
+});
+test('objective guides through shrines, village heart and next regions',()=>{
+ let s=progression(progression(initialProgress,{type:'enter'}),{type:'land'});
+ assert.equal(objective(s,0,20)?.kind,'shrine');
+ for(const shrine of hillShrines) s=progression(s,{type:'attune',id:shrine.id,distance:0});
+ let o=objective(s,0,0)!; assert.equal(o.kind,'region'); assert.equal(o.label,'Vila das Ahosi');
+ o=objective(s,village.x,-21)!; assert.equal(o.kind,'heart'); assert.deepEqual([o.x,o.z],[village.x,village.z]);
+ s=progression(s,{type:'arrive',target:'village',distance:0});
+ o=objective(s,village.x,village.z)!; assert.equal(o.kind,'region'); assert.equal(o.label,'Bosque Protegido');
+ assert.equal(objective(s,-22,-3)?.kind,'shrine');
+ for(const shrine of [...forestShrines,...clearingShrines]) s=progression(s,{type:'attune',id:shrine.id,distance:0});
+ assert.deepEqual(objective(s,-25,-3),{x:bosque.x,z:bosque.z,label:'Coração do bosque',kind:'heart'});
+ s=progression(s,{type:'arrive',target:'forest',distance:0});s=progression(s,{type:'arrive',target:'temple_clearing',distance:0});
+ assert.equal(objective(s,clareira.x,clareira.z),null);
 });
