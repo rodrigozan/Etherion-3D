@@ -12,7 +12,7 @@ import {Vegetation,Paths,Village,Forest,TempleClearing,Atmosphere,Wildlife,Mount
 import {move} from '../world/navigation';
 const entryStart:Record<RegionId,{x:number;z:number}>={hill:spawn,village:{x:1,z:-22},forest:{x:-22,z:-3},temple_clearing:{x:-34,z:-16}};
 export type Controls = {keys:Set<string>; yaw:number; pitch:number};
-type Props = {progress:Progress; dispatch:React.Dispatch<Action>; controls:Controls; onPosition:(x:number,z:number)=>void; detail?:boolean};
+type Props = {progress:Progress; dispatch:React.Dispatch<Action>; controls:Controls; onPosition:(x:number,z:number)=>void; target?:{x:number;z:number}|null; detail?:boolean};
 function Terrain() {
  const geo=useMemo(()=>{const g=new THREE.PlaneGeometry(200,200,128,128);g.rotateX(-Math.PI/2);const p=g.attributes.position;const colors=[];const c=new THREE.Color();const moss=new THREE.Color('#1f4a3f');const deep=new THREE.Color('#233d2e');for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),h=heightAt(x,z);p.setY(i,h);c.set(h>7?'#626850':h>4?'#4f6150':'#304e47');c.multiplyScalar(.82+fbm(x*2.5,z*2.5,3)*.16);
  const dTemple=Math.hypot(x-clareira.x,z-clareira.z);if(dTemple<18)c.lerp(moss,Math.max(0,1-dTemple/18)*.6);
@@ -32,6 +32,13 @@ function CameraRig({progress,dispatch,controls,onPosition}:Props) {
  tick.current+=d;if(tick.current>.12){onPosition(pos.current.x,pos.current.z);tick.current=0;}
  });return null;
 }
+function Beacon({x,z}:{x:number;z:number}){const arrow=useRef<THREE.Group>(null!);const y=heightAt(x,z);
+ useFrame(({clock})=>{const t=clock.elapsedTime;arrow.current.position.y=y+4.6+Math.sin(t*2.4)*.35;arrow.current.rotation.y=t*1.2;});
+ return <group>
+ <mesh position={[x,y+9,z]}><cylinderGeometry args={[.06,.28,18,12,1,true]}/><meshBasicMaterial color="#f3d99a" transparent opacity={.12} depthWrite={false} side={THREE.DoubleSide} toneMapped={false}/></mesh>
+ <group ref={arrow} position={[x,y+4.6,z]}><mesh rotation={[Math.PI,0,0]}><coneGeometry args={[.55,1.1,4]}/><meshBasicMaterial color="#ffe3a3" toneMapped={false}/></mesh></group>
+ <mesh position={[x,y+.08,z]} rotation={[-Math.PI/2,0,0]}><ringGeometry args={[1.3,1.6,40]}/><meshBasicMaterial color="#f3d99a" transparent opacity={.55} depthWrite={false} toneMapped={false}/></mesh>
+ </group>;}
 const enterableIds:RegionId[]=['hill','village','forest','temple_clearing'];
 function unlockedFor(id:string,progress:Progress){return enterableIds.includes(id as RegionId)&&isRegionUnlocked(id as RegionId,progress);}
 type SceneProps = Props & {region:RegionKey; sunRef:React.RefObject<THREE.Mesh>};
@@ -48,7 +55,8 @@ function Scene(props:SceneProps){const atmo=props.progress.mode==='map'?null:REG
  <mesh position={[0,2.2,0]}><octahedronGeometry args={[.3]}/><meshStandardMaterial color={sc.base} emissive={sc.emissive} emissiveIntensity={lit?3:1}/></mesh>
  <pointLight position={[0,2.2,0]} color={sc.emissive} intensity={lit?3.4:1.1} distance={7} decay={2}/>
  </group>;})}
- {props.progress.mode==='map'&&regions.map(r=>{const unlocked=unlockedFor(r.id,props.progress);const enterable=enterableIds.includes(r.id as RegionId);return <Html key={r.id} position={[r.x,heightAt(r.x,r.z)+5,r.z]} center zIndexRange={[20,10]}><button className={'map-marker '+(unlocked?(r.id==='hill'?'active':'unlocked'):'locked')} disabled={!unlocked} onClick={()=>props.dispatch({type:'enter',target:r.id as RegionId})}><span className="marker-icon">{unlocked?'◇':'⌑'}</span><span>{r.name}</span><small>{unlocked?(r.id==='hill'?'EXPLORAR REGIÃO':'DESBLOQUEADA'):enterable?'BLOQUEADA':'EM BREVE'}</small></button></Html>;})}
+ {props.progress.mode==='map'&&regions.map(r=>{const unlocked=unlockedFor(r.id,props.progress);const enterable=enterableIds.includes(r.id as RegionId);const next=unlocked&&r.id!=='hill'&&!props.progress.visited.includes(r.id as RegionId);return <Html key={r.id} position={[r.x,heightAt(r.x,r.z)+5,r.z]} center zIndexRange={[20,10]}><button className={'map-marker '+(unlocked?(r.id==='hill'?'active':'unlocked'):'locked')+(next?' next':'')} disabled={!unlocked} onClick={()=>props.dispatch({type:'enter',target:r.id as RegionId})}><span className="marker-icon">{unlocked?'◇':'⌑'}</span><span>{r.name}</span><small>{unlocked?(r.id==='hill'?'EXPLORAR REGIÃO':next?'➜ PRÓXIMO DESTINO':'DESBLOQUEADA'):enterable?'BLOQUEADA':'EM BREVE'}</small></button></Html>;})}
+ {props.progress.mode==='explore'&&props.target&&<Beacon x={props.target.x} z={props.target.z}/>}
  <CameraRig {...props}/>
  </>;}
 export default function World(props:Props){
